@@ -124,6 +124,45 @@ businesses:
   business; swap it for a real accounting API if you want it to reconcile
   against a bank feed.
 
+## Optional: the claude-flow Claude Code plugin
+
+If you develop on this repo with Claude Code and want its multi-agent
+orchestration/swarm tooling (from [ruvnet/claude-flow](https://github.com/ruvnet/claude-flow))
+available as commands/agents inside your sessions, add it locally:
+
+```
+/plugin marketplace add ruvnet/claude-flow
+/plugin install ruflo-core@claude-flow
+```
+
+`/plugin` is an interactive command and isn't available in cloud/remote
+Claude Code sessions, so it can't be run from here — install it from a
+local terminal session instead. This plugin is unrelated to the agents in
+`src/agents/`; it only adds tooling to the Claude Code CLI itself, not a
+Python dependency of this project.
+
+If you'd rather have the marketplace auto-registered for anyone who opens
+this repo in Claude Code, add the following to `.claude/settings.json`
+yourself (a session running non-interactively can't write this file, since
+it grants trust to a third-party marketplace that can execute code):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "claude-flow": {
+      "source": { "source": "github", "repo": "ruvnet/claude-flow" }
+    }
+  },
+  "enabledPlugins": {
+    "ruflo-core@claude-flow": true
+  }
+}
+```
+
+Registering the marketplace this way still doesn't auto-install the
+plugin — each collaborator runs `claude plugin install ruflo-core@claude-flow`
+once to actually fetch it.
+
 ## Honest limitations
 
 - This does not guarantee profit, or any revenue at all — it automates the
