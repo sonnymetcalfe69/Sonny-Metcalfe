@@ -6,11 +6,30 @@ not real character art.
 
 from __future__ import annotations
 
+import zlib
+
 CELL = 4  # px per pixel
 
 # 8 columns wide. 'C' is the role's shirt color, substituted per role;
 # everything else is a fixed palette.
 WORKER_GRID = [
+    "..HHHH..",
+    ".HHHHHH.",
+    ".HSSSSH.",
+    "..SSSS..",
+    ".CCCCCC.",
+    "CCCCCCCC",
+    "CCCCCCCC",
+    ".CC..CC.",
+    ".CC..CC.",
+    ".BB..BB.",
+]
+
+# Same person, but with a crown row on top — the manager, sitting above
+# every other worker in the hierarchy.
+MANAGER_GRID = [
+    ".C.CC.C.",
+    ".CCCCCC.",
     "..HHHH..",
     ".HHHHHH.",
     ".HSSSSH.",
@@ -46,7 +65,21 @@ ROLE_COLORS = {
     "ops": "#5cf68a",
 }
 
+# Any "hired" specialist role not in ROLE_COLORS above gets a consistent
+# (but not hand-picked) color from this palette, keyed by its name.
+SPECIALIST_PALETTE = ["#f6c85c", "#5cf6d8", "#c85cf6", "#f68a5c", "#5c8af6"]
+
+MANAGER_COLOR = "#f5d523"
 IDLE_GLOW = "#1c2038"
+
+
+def role_color(role: str) -> str:
+    """Deterministic across process restarts, unlike Python's randomized
+    str hash() — a hired role should keep the same color every time."""
+    if role in ROLE_COLORS:
+        return ROLE_COLORS[role]
+    idx = zlib.crc32(role.encode()) % len(SPECIALIST_PALETTE)
+    return SPECIALIST_PALETTE[idx]
 
 
 def _render_grid(grid: list[str], color_map: dict[str, str], cell: int = CELL) -> str:
@@ -73,10 +106,20 @@ def _render_grid(grid: list[str], color_map: dict[str, str], cell: int = CELL) -
 
 
 def worker_svg(role: str) -> str:
-    color_map = {**FIXED_COLORS, "C": ROLE_COLORS.get(role, "#888888")}
+    color_map = {**FIXED_COLORS, "C": role_color(role)}
     return _render_grid(WORKER_GRID, color_map)
 
 
 def desk_svg(active: bool) -> str:
     color_map = {**FIXED_COLORS, "G": "#f5d523" if active else IDLE_GLOW}
     return _render_grid(DESK_GRID, color_map)
+
+
+def manager_svg() -> str:
+    color_map = {**FIXED_COLORS, "C": MANAGER_COLOR}
+    return _render_grid(MANAGER_GRID, color_map)
+
+
+def hq_console_svg(active: bool) -> str:
+    color_map = {**FIXED_COLORS, "G": MANAGER_COLOR if active else IDLE_GLOW}
+    return _render_grid(DESK_GRID, color_map, cell=CELL + 2)

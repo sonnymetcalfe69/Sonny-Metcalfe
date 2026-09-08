@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from src import state
+from src.tools import ideas as ideas_tool
 from src.tools import ledger, outbox
 from src.webapp import sprites
 
@@ -37,6 +38,9 @@ _ROLE_ACTIVITY_PATH = {
 
 
 def build_stations(last_cycle: dict[str, Any]) -> list[dict[str, Any]]:
+    """The core four roles, plus one station per hired specialist (from
+    a business's extra_agents — see src/agents/specialist.py) that showed
+    up in the last cycle's results."""
     stations = []
     for role, label in ROLE_LABELS.items():
         section, key = _ROLE_ACTIVITY_PATH[role]
@@ -45,6 +49,17 @@ def build_stations(last_cycle: dict[str, Any]) -> list[dict[str, Any]]:
             {
                 "role": role,
                 "label": label,
+                "active": active,
+                "worker_svg": sprites.worker_svg(role),
+                "desk_svg": sprites.desk_svg(active),
+            }
+        )
+    for role, info in last_cycle.get("specialists", {}).items():
+        active = bool(info.get("active"))
+        stations.append(
+            {
+                "role": role,
+                "label": role.replace("_", " ").title(),
                 "active": active,
                 "worker_svg": sprites.worker_svg(role),
                 "desk_svg": sprites.desk_svg(active),
@@ -107,6 +122,34 @@ def business_detail(business: dict[str, Any]) -> dict[str, Any]:
         "ledger_entries": entries,
         "status_color": STATUS_COLOR.get(finance["status"], "gray"),
         "stations": build_stations(biz_state.get("last_cycle", {})),
+        "ideas": list(reversed(ideas_tool.load(business_id)))[:20],
+    }
+
+
+def overview_hq(businesses: list[dict[str, Any]]) -> dict[str, Any]:
+    """The manager agent sitting above every business's pipeline — see
+    src/agents/manager.py. Read-only view of whatever the last `run_all`
+    wrote to state/_overview.json."""
+    hq_state = state.load(state.OVERVIEW_ID)
+    last_cycle = hq_state.get("last_cycle", {})
+    overview = last_cycle.get("overview", {})
+    global_budget = last_cycle.get("global_budget", {})
+    has_run = bool(hq_state.get("history"))
+
+    focus_id = overview.get("focus_business_id")
+    focus_name = next((b.get("name", b["id"]) for b in businesses if b["id"] == focus_id), focus_id)
+
+    return {
+        "has_run": has_run,
+        "headline": overview.get("headline"),
+        "focus_business_id": focus_id,
+        "focus_business_name": focus_name,
+        "focus_reason": overview.get("focus_reason"),
+        "notes": overview.get("notes", []),
+        "global_budget": global_budget,
+        "status_color": STATUS_COLOR.get(global_budget.get("status"), "gray"),
+        "manager_svg": sprites.manager_svg(),
+        "console_svg": sprites.hq_console_svg(active=has_run),
     }
 
 

@@ -6,6 +6,9 @@
     python cli.py approve ITEM_ID
     python cli.py reject ITEM_ID
     python cli.py record-ledger BUSINESS_ID {revenue|expense} AMOUNT "description"
+    python cli.py add-idea BUSINESS_ID "idea text"
+    python cli.py list-ideas BUSINESS_ID
+    python cli.py hire BUSINESS_ID ROLE "focus description"
 """
 
 from __future__ import annotations
@@ -13,10 +16,12 @@ from __future__ import annotations
 import argparse
 import sys
 
-from src.config import load_businesses, load_settings
+import yaml
+
+from src.config import CONFIG_DIR, load_businesses, load_settings
 from src.llm import DEFAULT_MODEL
 from src.orchestrator import run_all
-from src.tools import ledger, outbox
+from src.tools import ideas, ledger, outbox
 
 
 def cmd_run(args: argparse.Namespace) -> None:
@@ -28,7 +33,8 @@ def cmd_run(args: argparse.Namespace) -> None:
             sys.exit(f"No business with id '{args.business}' in config/businesses.yaml")
 
     model = settings.get("model", DEFAULT_MODEL)
-    report_path = run_all(businesses, model)
+    global_cap = settings.get("global_monthly_budget_cap", 0)
+    report_path = run_all(businesses, model, global_budget_cap=global_cap)
     print(f"Cycle complete. Report written to {report_path}")
     print("Run `python cli.py list-outbox` to see items awaiting your approval.")
 
@@ -64,6 +70,37 @@ def cmd_record_ledger(args: argparse.Namespace) -> None:
     print(f"Recorded {entry['kind']} of ${entry['amount']:.2f} for {args.business_id} ({entry['id']})")
 
 
+def cmd_add_idea(args: argparse.Namespace) -> None:
+    idea = ideas.add_idea(args.business_id, args.text)
+    print(f"Added idea {idea['id']} for {args.business_id}. It'll be expanded next cycle: `python cli.py run --business {args.business_id}`")
+
+
+def cmd_list_ideas(args: argparse.Namespace) -> None:
+    items = ideas.list_ideas(args.business_id)
+    if not items:
+        print("No ideas queued.")
+        return
+    for idea in items:
+        print(f"[{idea['id']}] ({idea['status']}) {idea['text']}")
+
+
+def cmd_hire(args: argparse.Namespace) -> None:
+    path = CONFIG_DIR / "businesses.yaml"
+    if not path.exists():
+        sys.exit(f"Missing {path}. Copy config/businesses.example.yaml to config/businesses.yaml first.")
+    raw = yaml.safe_load(path.read_text()) or {}
+    business = next((b for b in raw.get("businesses", []) if b["id"] == args.business_id), None)
+    if business is None:
+        sys.exit(f"No business with id '{args.business_id}' in config/businesses.yaml")
+
+    business.setdefault("extra_agents", []).append({"role": args.role, "focus": args.focus})
+    path.write_text(yaml.safe_dump(raw, sort_keys=False, default_flow_style=False))
+    print(
+        f"Hired '{args.role}' for {args.business_id} (focus: {args.focus}). "
+        "They'll show up at their own station starting next cycle."
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -89,6 +126,21 @@ def main() -> None:
     p_ledger.add_argument("amount", type=float)
     p_ledger.add_argument("description")
     p_ledger.set_defaults(func=cmd_record_ledger)
+
+    p_add_idea = sub.add_parser("add-idea", help="Queue a raw idea for a business to expand next cycle")
+    p_add_idea.add_argument("business_id")
+    p_add_idea.add_argument("text")
+    p_add_idea.set_defaults(func=cmd_add_idea)
+
+    p_list_ideas = sub.add_parser("list-ideas", help="List queued ideas for a business")
+    p_list_ideas.add_argument("business_id")
+    p_list_ideas.set_defaults(func=cmd_list_ideas)
+
+    p_hire = sub.add_parser("hire", help="Add a new specialist agent role to a business's hierarchy")
+    p_hire.add_argument("business_id")
+    p_hire.add_argument("role", help="e.g. seo_specialist, video_editor, customer_support")
+    p_hire.add_argument("focus", help="What this agent should specifically focus on")
+    p_hire.set_defaults(func=cmd_hire)
 
     args = parser.parse_args()
     args.func(args)

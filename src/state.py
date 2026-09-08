@@ -13,6 +13,11 @@ from typing import Any
 
 STATE_DIR = Path(__file__).resolve().parent.parent / "state"
 
+# Pseudo business id the portfolio-level manager agent's cycle results are
+# stored under (see src/agents/manager.py, src/orchestrator.py). Not a real
+# business — a business config should never use this as its id.
+OVERVIEW_ID = "_overview"
+
 
 def _path(business_id: str) -> Path:
     return STATE_DIR / f"{business_id}.json"

@@ -2,7 +2,7 @@ import yaml
 
 import dashboard
 from src import state
-from src.tools import ledger, outbox
+from src.tools import ideas, ledger, outbox
 from src.webapp import data as dashboard_data
 
 BUSINESS = {
@@ -22,6 +22,7 @@ def _patch_dirs(tmp_path, monkeypatch):
     monkeypatch.setattr(outbox, "APPROVED", tmp_path / "outbox" / "approved")
     monkeypatch.setattr(outbox, "REJECTED", tmp_path / "outbox" / "rejected")
     monkeypatch.setattr(dashboard_data, "REPORTS_DIR", tmp_path / "reports")
+    monkeypatch.setattr(ideas, "IDEAS_DIR", tmp_path / "state")
 
 
 def _write_businesses(tmp_path, businesses):
@@ -80,6 +81,71 @@ def test_full_pipeline_view(tmp_path, monkeypatch):
     resp = client.post(f"/outbox/{item_id}/approve", follow_redirects=True)
     assert resp.status_code == 200
     assert outbox.list_pending() == []
+
+
+def test_station_shows_hq_panel_idle_before_any_run(tmp_path, monkeypatch):
+    _patch_dirs(tmp_path, monkeypatch)
+    _write_businesses(tmp_path, [BUSINESS])
+    client = dashboard.app.test_client()
+    resp = client.get("/")
+    assert b"OVERVIEW" in resp.data
+    assert b"HQ online" in resp.data
+
+
+def test_station_shows_hq_panel_after_manager_cycle(tmp_path, monkeypatch):
+    _patch_dirs(tmp_path, monkeypatch)
+    _write_businesses(tmp_path, [BUSINESS])
+
+    state.record_cycle(
+        state.OVERVIEW_ID,
+        {
+            "overview": {
+                "headline": "One business is stalled.",
+                "focus_business_id": "biz1",
+                "focus_reason": "no cycle run yet",
+                "notes": ["keep an eye on spend"],
+            },
+            "global_budget": {"total_expense": 12.5, "global_monthly_budget_cap": 100, "status": "ok"},
+        },
+    )
+
+    client = dashboard.app.test_client()
+    resp = client.get("/")
+    assert b"One business is stalled." in resp.data
+    assert b"Test Biz" in resp.data  # focus_business_name resolved from id
+    assert b"no cycle run yet" in resp.data
+    assert b"keep an eye on spend" in resp.data
+
+
+def test_add_idea_via_dashboard(tmp_path, monkeypatch):
+    _patch_dirs(tmp_path, monkeypatch)
+    _write_businesses(tmp_path, [BUSINESS])
+    client = dashboard.app.test_client()
+
+    resp = client.post("/business/biz1/ideas", data={"text": "a video about keyboard switches"}, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b"a video about keyboard switches" in resp.data
+    assert b"pending" in resp.data
+
+    queued = ideas.list_ideas("biz1")
+    assert len(queued) == 1
+    assert queued[0]["text"] == "a video about keyboard switches"
+
+
+def test_add_idea_ignores_blank_text(tmp_path, monkeypatch):
+    _patch_dirs(tmp_path, monkeypatch)
+    _write_businesses(tmp_path, [BUSINESS])
+    client = dashboard.app.test_client()
+    client.post("/business/biz1/ideas", data={"text": "   "}, follow_redirects=True)
+    assert ideas.list_ideas("biz1") == []
+
+
+def test_add_idea_404_for_unknown_business(tmp_path, monkeypatch):
+    _patch_dirs(tmp_path, monkeypatch)
+    _write_businesses(tmp_path, [BUSINESS])
+    client = dashboard.app.test_client()
+    resp = client.post("/business/does-not-exist/ideas", data={"text": "x"})
+    assert resp.status_code == 404
 
 
 def test_business_detail_404_for_unknown_id(tmp_path, monkeypatch):

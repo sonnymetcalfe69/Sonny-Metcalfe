@@ -1,6 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Rooms{% endblock %}
 {% block content %}
+  <div class="hq">
+    <div class="hq-sprite">
+      <div class="worker-sprite">{{ hq.manager_svg | safe }}</div>
+      <div class="desk-sprite">{{ hq.console_svg | safe }}</div>
+    </div>
+    <div class="hq-body">
+      <div class="room-header">
+        <h2 class="pixel" style="font-size:13px;">OVERVIEW — HQ</h2>
+        <span class="status-light {{ hq.status_color }}" title="Portfolio budget: {{ hq.global_budget.status }}"></span>
+      </div>
+      {% if hq.has_run %}
+        <p>{{ hq.headline }}</p>
+        {% if hq.focus_business_id %}
+          <p><strong>Focus today:</strong>
+            <a href="{{ url_for('business_detail', business_id=hq.focus_business_id) }}">{{ hq.focus_business_name }}</a>
+            — {{ hq.focus_reason }}
+          </p>
+        {% endif %}
+        {% if hq.notes %}
+          <ul class="plain">
+            {% for n in hq.notes %}<li>{{ n }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+        <p class="dim">
+          Portfolio spend: ${{ '%.2f'|format(hq.global_budget.total_expense) }}
+          {% if hq.global_budget.global_monthly_budget_cap %} / ${{ '%.2f'|format(hq.global_budget.global_monthly_budget_cap) }} cap{% endif %}
+        </p>
+      {% else %}
+        <p class="dim">No cycle run yet — run <code>python cli.py run</code> to bring HQ online.</p>
+      {% endif %}
+    </div>
+  </div>
+
   {% if not rooms %}
     <p class="empty-state dim">No businesses configured yet. Add some to config/businesses.yaml.</p>
   {% endif %}

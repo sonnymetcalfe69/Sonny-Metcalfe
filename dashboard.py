@@ -14,10 +14,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-from flask import Flask, redirect, render_template, url_for
+from flask import Flask, redirect, render_template, request, url_for
 
 from src.webapp import data as dashboard_data
-from src.tools import outbox
+from src.tools import ideas, outbox
 
 CONFIG_DIR = Path(__file__).resolve().parent / "config"
 
@@ -41,7 +41,8 @@ def station():
     if businesses is None:
         return render_template("setup.html")
     rooms = dashboard_data.station_overview(businesses)
-    return render_template("station.html", rooms=rooms, active="station")
+    hq = dashboard_data.overview_hq(businesses)
+    return render_template("station.html", rooms=rooms, hq=hq, active="station")
 
 
 @app.route("/business/<business_id>")
@@ -52,6 +53,17 @@ def business_detail(business_id: str):
         return render_template("setup.html"), 404
     detail = dashboard_data.business_detail(business)
     return render_template("business.html", detail=detail, active="station")
+
+
+@app.route("/business/<business_id>/ideas", methods=["POST"])
+def add_idea(business_id: str):
+    businesses = _load_businesses() or []
+    if _find_business(businesses, business_id) is None:
+        return render_template("setup.html"), 404
+    text = request.form.get("text", "").strip()
+    if text:
+        ideas.add_idea(business_id, text)
+    return redirect(url_for("business_detail", business_id=business_id))
 
 
 @app.route("/outbox")

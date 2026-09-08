@@ -41,6 +41,24 @@
     {% endif %}
   </div>
 
+  <div class="room" style="margin-top:24px;">
+    <h3 class="pixel" style="font-size:12px;">IDEAS</h3>
+    <p class="dim">Drop in a raw idea — next cycle it becomes this business's top priority and gets fully expanded into a draft.</p>
+    <form method="post" action="{{ url_for('add_idea', business_id=detail.business.id) }}" class="idea-form">
+      <input type="text" name="text" placeholder="e.g. a short on why mechanical switches sound different" required>
+      <button class="pixel-btn approve" type="submit">QUEUE IT</button>
+    </form>
+    {% if detail.ideas %}
+      <ul class="plain idea-list">
+        {% for idea in detail.ideas %}
+          <li><span class="badge idea-status {{ idea.status }}">{{ idea.status }}</span> {{ idea.text }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="dim">No ideas queued yet.</p>
+    {% endif %}
+  </div>
+
   <h3 class="pixel" style="font-size:12px; margin-top:24px;">RECENT CYCLES</h3>
   {% if not detail.history %}
     <p class="dim">No cycles run yet.</p>

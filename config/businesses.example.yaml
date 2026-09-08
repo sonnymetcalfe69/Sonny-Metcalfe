@@ -27,3 +27,45 @@ businesses:
       - "Draft a personalized outreach message per lead"
       - "Follow up on proposals older than 5 days"
     channels: ["email", "upwork"]
+
+  # business_type "faceless_youtube": the marketer drafts a full short-form
+  # script (hook/beats/CTA/titles/hashtags/thumbnail text) instead of
+  # generic copy. Feed it raw video ideas with:
+  #   python cli.py add-idea example-shorts-channel "why mechanical keyboards click differently"
+  - id: example-shorts-channel
+    name: "Example faceless YouTube Shorts channel"
+    business_type: faceless_youtube
+    description: >
+      A faceless Shorts channel narrating quick, surprising facts over
+      stock/B-roll footage — no on-camera talent. Just starting out: 0
+      subscribers. Goal: build a consistent posting habit and find a hook
+      style that gets watched to the end.
+    monthly_budget_cap: 20
+    goals:
+      - "Post 3 shorts this week"
+      - "Try 2 different hook styles and compare which reads stronger on paper"
+    channels: ["youtube"]
+
+  # business_type "digital_products": the marketer drafts a full listing
+  # (concept/title/description/tags/price) instead of generic copy. Feed
+  # it raw product ideas with:
+  #   python cli.py add-idea example-printables-shop "a weekly meal-prep planner"
+  # This one also shows "hiring" an extra specialist agent (see README.md
+  # "Hiring more agents") — it'll get its own station in this room.
+  - id: example-printables-shop
+    name: "Example digital printables shop"
+    business_type: digital_products
+    description: >
+      An Etsy shop selling printable planners and templates as instant
+      digital downloads. Currently 2 listings, ~$30/mo. Goal: grow to 10
+      listings covering a few adjacent niches (planners, trackers, cards).
+    monthly_budget_cap: 15
+    goals:
+      - "Ship one new listing this week"
+      - "Refresh tags on the two existing listings for better search match"
+    channels: ["etsy"]
+    extra_agents:
+      - role: seo_researcher
+        focus: >
+          Etsy search-tag and title keyword research specifically — not
+          general marketing copy, just what buyers are actually searching.
