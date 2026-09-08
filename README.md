@@ -163,6 +163,26 @@ Registering the marketplace this way still doesn't auto-install the
 plugin — each collaborator runs `claude plugin install ruflo-core@claude-flow`
 once to actually fetch it.
 
+### Lower-risk alternative: copy commands/agents by hand
+
+If you'd rather not register a marketplace or grant plugin trust at all, you
+can copy just the command/agent definitions (plain files, no code execution)
+into your own Claude Code config:
+
+```bash
+git clone https://github.com/ruvnet/claude-flow.git
+cd claude-flow
+cp -r .claude/commands/. ~/.claude/commands/
+cp -r .claude/agents/. ~/.claude/agents/
+```
+
+Note this repo's actual layout has `.claude/commands` and `.claude/agents`
+at the top level (not a `claude-plugin/` subdirectory some instructions
+floating around reference). Avoid `scripts/install.sh` unless you've read
+it — it runs `npm install -g`, can register an MCP server, and runs
+`ruflo init`/`ruflo doctor`, which is real code execution and global state
+change, not a simple file copy.
+
 ## Honest limitations
 
 - This does not guarantee profit, or any revenue at all — it automates the
