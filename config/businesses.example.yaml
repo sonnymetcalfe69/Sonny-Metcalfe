@@ -1,0 +1,29 @@
+# Copy to config/businesses.yaml and describe your actual business(es).
+# See README.md "Configuring a business" for field docs.
+
+businesses:
+  - id: example-content-site
+    name: "Example niche content/affiliate site"
+    description: >
+      A blog reviewing budget mechanical keyboards, monetized via affiliate
+      links. Currently ~5k monthly visitors, ~$120/mo affiliate revenue.
+      Goal: grow organic traffic and publish consistently.
+    monthly_budget_cap: 50
+    goals:
+      - "Publish 2 well-researched articles per week"
+      - "Identify 3 new keyword opportunities with low competition"
+      - "Improve internal linking on existing top-10 pages"
+    channels: ["blog", "pinterest"]
+
+  - id: example-freelance-service
+    name: "Example freelance copywriting service"
+    description: >
+      Solo freelance business writing landing page copy for small SaaS
+      companies. Currently 1-2 clients/month at $800/project.
+      Goal: fill pipeline to 4 clients/month without raising ad spend.
+    monthly_budget_cap: 0
+    goals:
+      - "Find 5 qualified leads per week on relevant job boards/forums"
+      - "Draft a personalized outreach message per lead"
+      - "Follow up on proposals older than 5 days"
+    channels: ["email", "upwork"]

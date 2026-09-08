@@ -1,0 +1,12 @@
+# Copy to config/settings.yaml and adjust.
+
+model: "claude-sonnet-5"
+
+# Draft-only is the only mode this scaffold implements out of the box.
+# Everything that would leave the system (emails, posts, listings, spend)
+# lands in outbox/ for manual approval. See README.md "Safety model".
+approval_mode: "draft_only"
+
+# Hard ceiling the Finance agent will flag a breach against, summed across
+# all businesses, independent of each business's own monthly_budget_cap.
+global_monthly_budget_cap: 500
