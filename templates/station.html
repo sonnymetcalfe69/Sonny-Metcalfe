@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Rooms{% endblock %}
+{% block content %}
+  {% if not rooms %}
+    <p class="empty-state dim">No businesses configured yet. Add some to config/businesses.yaml.</p>
+  {% endif %}
+  <div class="rooms">
+    {% for room in rooms %}
+      <div class="room">
+        <div class="room-header">
+          <h2><a href="{{ url_for('business_detail', business_id=room.id) }}">{{ room.name }}</a></h2>
+          <span class="status-light {{ room.status_color }}" title="Finance: {{ room.finance.status }}"></span>
+        </div>
+        <p class="dim">{{ room.description }}</p>
+
+        {% if room.has_run %}
+          <strong>Today's priorities:</strong>
+          <ul class="plain">
+            {% for p in room.priorities %}<li>{{ p }}</li>{% else %}<li class="dim">none yet</li>{% endfor %}
+          </ul>
+          {% if room.watch_items %}
+            <strong>⚠ Watch:</strong>
+            <ul class="plain">
+              {% for w in room.watch_items %}<li>{{ w }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        {% else %}
+          <p class="dim">No cycle run yet — run <code>python cli.py run --business {{ room.id }}</code></p>
+        {% endif %}
+
+        <p>
+          {% if room.pending_count %}
+            <span class="badge">{{ room.pending_count }} pending approval{{ 's' if room.pending_count != 1 }}</span>
+          {% endif %}
+        </p>
+
+        {% if room.finance.monthly_budget_cap %}
+          <div class="dim">Budget: ${{ '%.2f'|format(room.finance.expense) }} / ${{ '%.2f'|format(room.finance.monthly_budget_cap) }}</div>
+          <div class="budget-bar">
+            <div class="budget-bar-fill {{ room.status_color }}" style="width: {{ room.finance.pct_of_cap }}%"></div>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

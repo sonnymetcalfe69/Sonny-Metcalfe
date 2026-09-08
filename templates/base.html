@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Station{% endblock %} · Side Business Ecosystem</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="pixel">STATION</h1>
+    <nav>
+      <a href="{{ url_for('station') }}" class="{{ 'active' if active == 'station' }}">Rooms</a>
+      <a href="{{ url_for('outbox_view') }}" class="{{ 'active' if active == 'outbox' }}">Outbox</a>
+      <a href="{{ url_for('reports_view') }}" class="{{ 'active' if active == 'reports' }}">Reports</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

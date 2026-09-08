@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ detail.business.name }}{% endblock %}
+{% block content %}
+  <p><a href="{{ url_for('station') }}">&laquo; back to rooms</a></p>
+  <div class="room">
+    <div class="room-header">
+      <h2>{{ detail.business.name }}</h2>
+      <span class="status-light {{ detail.status_color }}"></span>
+    </div>
+    <p class="dim">{{ detail.business.description }}</p>
+
+    <h3 class="pixel" style="font-size:12px;">FINANCE — {{ detail.finance.month }}</h3>
+    <p>
+      Revenue: ${{ '%.2f'|format(detail.finance.revenue) }} &nbsp;
+      Expense: ${{ '%.2f'|format(detail.finance.expense) }} &nbsp;
+      Net: ${{ '%.2f'|format(detail.finance.net) }}
+    </p>
+    {% if detail.finance.monthly_budget_cap %}
+      <div class="budget-bar">
+        <div class="budget-bar-fill {{ detail.status_color }}" style="width: {{ detail.finance.pct_of_cap }}%"></div>
+      </div>
+      <p class="dim">Cap: ${{ '%.2f'|format(detail.finance.monthly_budget_cap) }}/mo — status: {{ detail.finance.status }}</p>
+    {% endif %}
+
+    {% if detail.ledger_entries %}
+      <table class="ledger">
+        <tr><th>Date</th><th>Kind</th><th>Amount</th><th>Description</th></tr>
+        {% for e in detail.ledger_entries %}
+          <tr>
+            <td>{{ e.date }}</td>
+            <td>{{ e.kind }}</td>
+            <td>${{ '%.2f'|format(e.amount) }}</td>
+            <td>{{ e.description }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="dim">No ledger entries yet. Record one with <code>python cli.py record-ledger {{ detail.business.id }} revenue 100 "..."</code></p>
+    {% endif %}
+  </div>
+
+  <h3 class="pixel" style="font-size:12px; margin-top:24px;">RECENT CYCLES</h3>
+  {% if not detail.history %}
+    <p class="dim">No cycles run yet.</p>
+  {% endif %}
+  {% for cycle in detail.history %}
+    <div class="room" style="margin-bottom:16px;">
+      <p class="dim">{{ cycle.timestamp }}</p>
+      <strong>Priorities:</strong>
+      <ul class="plain">
+        {% for p in cycle.strategy.priorities %}<li>{{ p }}</li>{% endfor %}
+      </ul>
+      {% if cycle.research.findings %}
+        <strong>Research{{ ' (live)' if cycle.research.live_data else ' (general knowledge)' }}:</strong>
+        <ul class="plain">
+          {% for f in cycle.research.findings %}<li>{{ f }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endblock %}

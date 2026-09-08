@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+  <h2 class="pixel" style="font-size:14px;">DAILY REPORTS</h2>
+  {% if not filenames %}
+    <p class="empty-state dim">No reports yet — run <code>python cli.py run</code> to generate one.</p>
+  {% endif %}
+  <div class="room report-list">
+    {% for f in filenames %}
+      <a href="{{ url_for('report_detail', filename=f) }}">{{ f }}</a>
+    {% endfor %}
+  </div>
+{% endblock %}

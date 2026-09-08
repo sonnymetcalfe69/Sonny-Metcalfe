@@ -72,6 +72,26 @@ python cli.py reject <item_id>
 Run `python cli.py run` on a schedule (cron, a CI scheduled workflow, or a
 Claude Code Routine) to get a daily digest in `reports/`.
 
+## Dashboard
+
+```bash
+python dashboard.py
+```
+
+Opens a local web UI at `http://127.0.0.1:5050` — a "station" view with one
+room per configured business (priorities, watch items, budget bar), an
+Outbox page where you approve/reject pending drafts and proposals from the
+browser instead of the CLI, and a Reports page to browse past daily
+digests. It's a thin read/write layer over the same `state/`, `outbox/`,
+and `reports/` files the CLI uses — it doesn't call the LLM itself, and
+approving an item there does exactly what `cli.py approve` does (moves it
+to `outbox/approved/`, sends nothing).
+
+The visual style is a deliberate homage to StarNet
+(github.com/androoAGI/starnet) — a separate, much larger open-source
+"AI agent station" desktop app — but this dashboard is its own small Flask
+app with no code or runtime dependency on that project.
+
 ## Configuring a business
 
 Edit `config/businesses.yaml`. Each entry is intentionally generic — it

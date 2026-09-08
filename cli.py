@@ -12,28 +12,16 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
-import yaml
-
+from src.config import load_businesses, load_settings
 from src.llm import DEFAULT_MODEL
 from src.orchestrator import run_all
 from src.tools import ledger, outbox
 
-CONFIG_DIR = Path(__file__).resolve().parent / "config"
-
-
-def load_yaml(name: str) -> dict:
-    path = CONFIG_DIR / name
-    if not path.exists():
-        example = CONFIG_DIR / f"{path.stem}.example.yaml"
-        sys.exit(f"Missing {path}. Copy {example} to {path} and edit it first.")
-    return yaml.safe_load(path.read_text()) or {}
-
 
 def cmd_run(args: argparse.Namespace) -> None:
-    settings = load_yaml("settings.yaml")
-    businesses = load_yaml("businesses.yaml").get("businesses", [])
+    settings = load_settings()
+    businesses = load_businesses()
     if args.business:
         businesses = [b for b in businesses if b["id"] == args.business]
         if not businesses:

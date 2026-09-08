@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Outbox{% endblock %}
+{% block content %}
+  <h2 class="pixel" style="font-size:14px;">OUTBOX — pending your approval</h2>
+  <p class="dim">Approving moves an item to outbox/approved/. Nothing is sent, posted, or paid for automatically — see README.md.</p>
+
+  {% if not items %}
+    <p class="empty-state dim">Nothing pending.</p>
+  {% endif %}
+
+  {% for item in items %}
+    <div class="outbox-item">
+      <h3>{{ item.business_name }} — {{ item.channel }} / {{ item.action_type }}</h3>
+      {% if item.payload.title %}<strong>{{ item.payload.title }}</strong>{% endif %}
+      <div class="outbox-body">{{ item.payload.body or item.payload.description or (item.payload | tojson(indent=2)) }}</div>
+      {% if item.payload.estimated_cost %}
+        <p class="dim">Estimated cost: ${{ '%.2f'|format(item.payload.estimated_cost) }}</p>
+      {% endif %}
+      <form method="post" action="{{ url_for('outbox_approve', item_id=item.id) }}" style="display:inline;">
+        <button class="pixel-btn approve" type="submit">APPROVE</button>
+      </form>
+      <form method="post" action="{{ url_for('outbox_reject', item_id=item.id) }}" style="display:inline;">
+        <button class="pixel-btn reject" type="submit">REJECT</button>
+      </form>
+    </div>
+  {% endfor %}
+{% endblock %}
