@@ -1,0 +1,9 @@
+<div class="stations-row">
+  {% for s in stations %}
+    <div class="station {{ 'active' if s.active }}" title="{{ s.label }}{{ ' — working' if s.active else ' — idle' }}">
+      <div class="worker-sprite">{{ s.worker_svg | safe }}</div>
+      <div class="desk-sprite">{{ s.desk_svg | safe }}</div>
+      <div class="station-label">{{ s.label }}</div>
+    </div>
+  {% endfor %}
+</div>

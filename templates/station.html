@@ -13,6 +13,8 @@
         </div>
         <p class="dim">{{ room.description }}</p>
 
+        {% with stations = room.stations %}{% include "_stations.html" %}{% endwith %}
+
         {% if room.has_run %}
           <strong>Today's priorities:</strong>
           <ul class="plain">

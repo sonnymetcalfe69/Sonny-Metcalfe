@@ -9,6 +9,7 @@ from typing import Any
 
 from src import state
 from src.tools import ledger, outbox
+from src.webapp import sprites
 
 REPORTS_DIR = Path(__file__).resolve().parent.parent.parent / "reports"
 
@@ -17,6 +18,39 @@ STATUS_COLOR = {
     "approaching_cap": "yellow",
     "over_budget": "red",
 }
+
+ROLE_LABELS = {
+    "strategist": "Strategist",
+    "researcher": "Researcher",
+    "marketer": "Marketer",
+    "ops": "Ops",
+}
+
+# Where in a cycle result to look to decide whether that role "did something"
+# last cycle — used to light up (or dim) its console.
+_ROLE_ACTIVITY_PATH = {
+    "strategist": ("strategy", "priorities"),
+    "researcher": ("research", "findings"),
+    "marketer": ("marketing", "drafts"),
+    "ops": ("operations", "proposed_actions"),
+}
+
+
+def build_stations(last_cycle: dict[str, Any]) -> list[dict[str, Any]]:
+    stations = []
+    for role, label in ROLE_LABELS.items():
+        section, key = _ROLE_ACTIVITY_PATH[role]
+        active = bool(last_cycle.get(section, {}).get(key))
+        stations.append(
+            {
+                "role": role,
+                "label": label,
+                "active": active,
+                "worker_svg": sprites.worker_svg(role),
+                "desk_svg": sprites.desk_svg(active),
+            }
+        )
+    return stations
 
 
 def _finance_view(business_id: str, monthly_budget_cap: float) -> dict[str, Any]:
@@ -53,6 +87,7 @@ def station_overview(businesses: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "status_color": STATUS_COLOR.get(finance["status"], "gray"),
                 "pending_count": len(room_pending),
                 "has_run": bool(biz_state.get("history")),
+                "stations": build_stations(last_cycle),
             }
         )
     return rooms
@@ -71,6 +106,7 @@ def business_detail(business: dict[str, Any]) -> dict[str, Any]:
         "pending": pending,
         "ledger_entries": entries,
         "status_color": STATUS_COLOR.get(finance["status"], "gray"),
+        "stations": build_stations(biz_state.get("last_cycle", {})),
     }
 
 

@@ -9,6 +9,8 @@
     </div>
     <p class="dim">{{ detail.business.description }}</p>
 
+    {% with stations = detail.stations %}{% include "_stations.html" %}{% endwith %}
+
     <h3 class="pixel" style="font-size:12px;">FINANCE — {{ detail.finance.month }}</h3>
     <p>
       Revenue: ${{ '%.2f'|format(detail.finance.revenue) }} &nbsp;
